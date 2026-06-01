@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>URL Shortener</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: Inter, Arial, sans-serif;
+            background:
+                    radial-gradient(circle at top left, rgba(79, 70, 229, 0.25), transparent 35%),
+                    radial-gradient(circle at bottom right, rgba(14, 165, 233, 0.25), transparent 35%),
+                    #0f172a;
+            color: #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 32px;
+        }
+
+        .page {
+            width: 100%;
+            max-width: 900px;
+        }
+
+        .hero {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 8px 14px;
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            border-radius: 999px;
+            color: #93c5fd;
+            background: rgba(15, 23, 42, 0.7);
+            font-size: 14px;
+            margin-bottom: 18px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 48px;
+            line-height: 1.1;
+            letter-spacing: -1px;
+        }
+
+        .hero p {
+            margin: 16px auto 0;
+            max-width: 620px;
+            color: #94a3b8;
+            font-size: 18px;
+            line-height: 1.6;
+        }
+
+        .card {
+            background: rgba(15, 23, 42, 0.82);
+            border: 1px solid rgba(148, 163, 184, 0.25);
+            box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
+            backdrop-filter: blur(18px);
+            border-radius: 28px;
+            padding: 28px;
+        }
+
+        .form {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        input {
+            flex: 1;
+            border: 1px solid rgba(148, 163, 184, 0.35);
+            background: rgba(2, 6, 23, 0.75);
+            color: #f8fafc;
+            border-radius: 16px;
+            padding: 16px 18px;
+            font-size: 16px;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: #60a5fa;
+            box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.15);
+        }
+
+        input::placeholder {
+            color: #64748b;
+        }
+
+        button {
+            border: none;
+            border-radius: 16px;
+            padding: 16px 22px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            color: white;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 14px 30px rgba(37, 99, 235, 0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .hint {
+            color: #64748b;
+            font-size: 14px;
+            margin-bottom: 22px;
+        }
+
+        .result {
+            display: none;
+            margin-top: 24px;
+            border-radius: 22px;
+            padding: 22px;
+            background: rgba(30, 41, 59, 0.75);
+            border: 1px solid rgba(148, 163, 184, 0.18);
+        }
+
+        .result-title {
+            margin: 0 0 14px;
+            color: #cbd5e1;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .short-link-box {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 16px;
+            border-radius: 16px;
+            background: rgba(2, 6, 23, 0.75);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            margin-bottom: 18px;
+        }
+
+        a {
+            color: #67e8f9;
+            text-decoration: none;
+            word-break: break-all;
+            font-weight: 700;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        .stats {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-top: 14px;
+        }
+
+        .stat-card {
+            flex: 1;
+            padding: 16px;
+            border-radius: 16px;
+            background: rgba(15, 23, 42, 0.65);
+            border: 1px solid rgba(148, 163, 184, 0.16);
+        }
+
+        .stat-label {
+            color: #94a3b8;
+            font-size: 14px;
+            margin-bottom: 6px;
+        }
+
+        .stat-value {
+            font-size: 30px;
+            font-weight: 800;
+            color: #f8fafc;
+        }
+
+        .secondary-button {
+            background: rgba(148, 163, 184, 0.16);
+            color: #e2e8f0;
+        }
+
+        .error {
+            display: none;
+            margin-top: 18px;
+            padding: 16px;
+            border-radius: 16px;
+            background: rgba(127, 29, 29, 0.35);
+            border: 1px solid rgba(248, 113, 113, 0.35);
+            color: #fecaca;
+        }
+
+        @media (max-width: 700px) {
+            body {
+                padding: 18px;
+                align-items: flex-start;
+            }
+
+            h1 {
+                font-size: 34px;
+            }
+
+            .form {
+                flex-direction: column;
+            }
+
+            .stats {
+                flex-direction: column;
+            }
+
+            .short-link-box {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+
+<body>
+<div class="page">
+    <div class="hero">
+        <div class="badge">Java Backend Pet Project</div>
+        <h1>URL Shortener</h1>
+        <p>
+            Сервис сокращения ссылок: вставь длинный URL, получи короткую ссылку,
+            перейди по ней и проверь количество кликов.
+        </p>
+    </div>
+
+    <div class="card">
+        <div class="form">
+            <input id="originalUrlInput" type="text" placeholder="https://example.com/very-long-url">
+            <button onclick="createShortLink()">Сократить</button>
+        </div>
+
+        <div class="hint">
+            Backend должен быть запущен на http://localhost:8080
+        </div>
+
+        <div id="resultBlock" class="result">
+            <p class="result-title">Готовая короткая ссылка</p>
+
+            <div class="short-link-box">
+                <a id="shortLink" href="#" target="_blank"></a>
+                <button class="secondary-button" onclick="copyShortLink()">Копировать</button>
+            </div>
+
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-label">Short code</div>
+                    <div id="shortCodeValue" class="stat-value">—</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-label">Clicks</div>
+                    <div id="clicksCount" class="stat-value">0</div>
+                </div>
+
+                <button class="secondary-button" onclick="loadStats()">Обновить статистику</button>
+            </div>
+        </div>
+
+        <div id="errorBlock" class="error"></div>
+    </div>
+</div>
+
+<script>
+    let currentShortCode = null;
+    let currentShortUrl = null;
+
+    async function createShortLink() {
+        const input = document.getElementById("originalUrlInput");
+        const originalUrl = input.value.trim();
+
+        hideError();
+
+        if (!originalUrl) {
+            showError("Введите длинную ссылку.");
+            return;
+        }
+
+        try {
+            const response = await fetch("http://localhost:8080/api/links", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    originalUrl: originalUrl
+                })
+            });
+
+            if (!response.ok) {
+                showError("Backend вернул ошибку. HTTP status: " + response.status);
+                return;
+            }
+
+            const data = await response.json();
+
+            currentShortCode = data.shortCode;
+            currentShortUrl = data.shortUrl || "http://localhost:8080/" + data.shortCode;
+
+            const shortLink = document.getElementById("shortLink");
+            shortLink.textContent = currentShortUrl;
+            shortLink.href = currentShortUrl;
+
+            document.getElementById("shortCodeValue").textContent = currentShortCode;
+            document.getElementById("clicksCount").textContent = data.clicks || 0;
+            document.getElementById("resultBlock").style.display = "block";
+
+        } catch (error) {
+            showError("Не удалось подключиться к backend. Проверь docker compose up --build.");
+            console.error(error);
+        }
+    }
+
+    async function loadStats() {
+        if (!currentShortCode) {
+            showError("Сначала создай короткую ссылку.");
+            return;
+        }
+
+        hideError();
+
+        try {
+            const response = await fetch("http://localhost:8080/api/links/" + currentShortCode + "/stats");
+
+            if (!response.ok) {
+                showError("Не удалось получить статистику. HTTP status: " + response.status);
+                return;
+            }
+
+            const data = await response.json();
+
+            document.getElementById("clicksCount").textContent = data.clicks;
+
+        } catch (error) {
+            showError("Ошибка при запросе статистики.");
+            console.error(error);
+        }
+    }
+
+    async function copyShortLink() {
+        if (!currentShortUrl) {
+            showError("Сначала создай короткую ссылку.");
+            return;
+        }
+
+        await navigator.clipboard.writeText(currentShortUrl);
+    }
+
+    function showError(message) {
+        const errorBlock = document.getElementById("errorBlock");
+        errorBlock.textContent = message;
+        errorBlock.style.display = "block";
+    }
+
+    function hideError() {
+        const errorBlock = document.getElementById("errorBlock");
+        errorBlock.textContent = "";
+        errorBlock.style.display = "none";
+    }
+</script>
+</body>
+</html>
