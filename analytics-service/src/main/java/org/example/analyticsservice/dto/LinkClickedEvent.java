@@ -7,6 +7,7 @@ public class LinkClickedEvent {
         private String originalUrl;
         private LocalDateTime clickedAt;
         private String ip;
+        private String correlationId;
 
         public LinkClickedEvent() {
         }
@@ -33,6 +34,10 @@ public class LinkClickedEvent {
             return originalUrl;
         }
 
+        public String getCorrelationId() {
+        return correlationId;
+        }
+
         public void setOriginalUrl(String originalUrl) {
             this.originalUrl = originalUrl;
         }
@@ -52,5 +57,9 @@ public class LinkClickedEvent {
         public void setIp(String ip) {
             this.ip = ip;
         }
+
+        public void setCorrelationId(String correlationId) {
+        this.correlationId = correlationId;
+         }
     }
 

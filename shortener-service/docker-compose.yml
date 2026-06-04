@@ -53,6 +53,24 @@ services:
 
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
 
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: shortener-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    depends_on:
+      - shortener-service
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: shortener-grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+
   shortener-service:
     build: .
     container_name: shortener-service

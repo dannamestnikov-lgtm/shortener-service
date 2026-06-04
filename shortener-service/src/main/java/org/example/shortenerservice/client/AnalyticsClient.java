@@ -1,5 +1,6 @@
 package org.example.shortenerservice.client;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -7,6 +8,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 public class AnalyticsClient {
     private final WebClient webClient;
 
+    @Autowired
     public AnalyticsClient(WebClient.Builder webClientBuilder) {
         this.webClient = webClientBuilder
                 .baseUrl("http://host.docker.internal:8081")

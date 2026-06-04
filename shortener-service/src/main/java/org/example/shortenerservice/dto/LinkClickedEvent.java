@@ -7,15 +7,21 @@ public class LinkClickedEvent {
     private String originalUrl;
     private LocalDateTime clickedAt;
     private String ip;
+    private String correlationId;
 
     public LinkClickedEvent() {
     }
 
-    public LinkClickedEvent(String shortCode, String originalUrl, LocalDateTime clickedAt, String ip) {
+    public LinkClickedEvent(String shortCode,
+                            String originalUrl,
+                            LocalDateTime clickedAt,
+                            String ip,
+                            String correlationId) {
         this.shortCode = shortCode;
         this.originalUrl = originalUrl;
         this.clickedAt = clickedAt;
         this.ip = ip;
+        this.correlationId = correlationId;
     }
 
     public String getShortCode() {
@@ -28,6 +34,10 @@ public class LinkClickedEvent {
 
     public String getOriginalUrl() {
         return originalUrl;
+    }
+
+    public String getCorrelationId() {
+        return correlationId;
     }
 
     public void setOriginalUrl(String originalUrl) {
@@ -48,5 +58,9 @@ public class LinkClickedEvent {
 
     public void setIp(String ip) {
         this.ip = ip;
+    }
+
+    public void setCorrelationId(String correlationId) {
+        this.correlationId = correlationId;
     }
 }
