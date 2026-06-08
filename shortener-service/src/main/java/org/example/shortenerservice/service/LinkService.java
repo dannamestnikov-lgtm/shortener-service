@@ -26,6 +26,8 @@ public class LinkService {
     private static final Logger log = LoggerFactory.getLogger(LinkService.class);
     private final Counter linksCreatedCounter;
     private final Counter linksClicksCounter;
+    @Value("${app.base-url:http://localhost:8080}")
+    private String appBaseUrl;
 
     public LinkService(LinkRepository linkRepository,
                        LinkCacheService linkCacheService,
@@ -51,7 +53,7 @@ public class LinkService {
         link.setClicks(0L);
         Link savedLink = linkRepository.save(link);
         linksCreatedCounter.increment();
-        String shortUrl = "http://localhost:8080/" + savedLink.getShortCode();
+        String shortUrl = appBaseUrl + "/"  + savedLink.getShortCode();
         LinkResponse response = new LinkResponse(savedLink.getShortCode(),
                                                  savedLink.getOriginalUrl(),
                                                  shortUrl,
@@ -92,7 +94,7 @@ public class LinkService {
         public LinkResponse getByShortCode(String shortCode){
         Link link = linkRepository.findByShortCode(shortCode)
         .orElseThrow(() -> new LinkNotFoundException("Link not found"));
-        String shortUrl = "http://localhost:8080/" + link.getShortCode();
+        String shortUrl = appBaseUrl + "/"  + link.getShortCode();
         LinkResponse response = new LinkResponse(link.getShortCode(),
                 link.getOriginalUrl(),
                 shortUrl,

@@ -62,7 +62,8 @@ services:
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       REDIS_HOST: redis
       REDIS_PORT: 6379
-      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      APP_BASE_URL: http://5.42.112.163
     depends_on:
       postgres:
         condition: service_healthy
@@ -77,7 +78,7 @@ services:
     ports:
       - "8081:8081"
     environment:
-      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
     depends_on:
       kafka:
         condition: service_started
