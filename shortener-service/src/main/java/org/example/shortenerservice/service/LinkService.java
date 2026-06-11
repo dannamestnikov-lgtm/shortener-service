@@ -4,8 +4,11 @@ import org.example.shortenerservice.dto.CreateLinkRequest;
 import org.example.shortenerservice.dto.LinkClickedEvent;
 import org.example.shortenerservice.dto.LinkResponse;
 import org.example.shortenerservice.dto.LinkStatsResponse;
+import org.example.shortenerservice.entity.OutboxEvent;
+import org.example.shortenerservice.entity.OutboxStatus;
 import org.example.shortenerservice.exception.LinkNotFoundException;
 import org.example.shortenerservice.repository.LinkRepository;
+import org.example.shortenerservice.repository.OutboxEventRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -14,13 +17,19 @@ import org.springframework.stereotype.Service;
 import org.example.shortenerservice.entity.Link;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.transaction.annotation.Transactional;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import static org.springframework.data.jpa.domain.AbstractPersistable_.id;
+
 @Service
 public class LinkService {
     private LinkRepository linkRepository;
+    private OutboxEventRepository outboxEventRepository;
     private LinkCacheService linkCacheService;
     private LinkClickProducer linkClickProducer;
     private static final Logger log = LoggerFactory.getLogger(LinkService.class);
@@ -28,14 +37,18 @@ public class LinkService {
     private final Counter linksClicksCounter;
     @Value("${app.base-url:http://localhost:8080}")
     private String appBaseUrl;
+    private final ObjectMapper objectMapper;
 
     public LinkService(LinkRepository linkRepository,
                        LinkCacheService linkCacheService,
                        LinkClickProducer linkClickProducer,
-                       MeterRegistry meterRegistry){
+                       MeterRegistry meterRegistry,
+                       OutboxEventRepository outboxEventRepository, ObjectMapper objectMapper){
         this.linkRepository = linkRepository;
         this.linkCacheService = linkCacheService;
         this.linkClickProducer = linkClickProducer;
+        this.outboxEventRepository = outboxEventRepository;
+        this.objectMapper = objectMapper;
 
         this.linksCreatedCounter = Counter.builder("links.creation.count")
                 .description("Total number of created links")
@@ -68,6 +81,7 @@ public class LinkService {
                 .substring(0, 8);
     }
 
+    @Transactional
     public String redirect(String shortCode, String ip){
         String originalUrl = linkCacheService.getOriginalUrlByShortCode(shortCode);
          Link link = linkRepository.findByShortCode(shortCode)
@@ -81,12 +95,35 @@ public class LinkService {
         log.info("Redirect link: shortCode={}, originalUrl={}",
                 link.getShortCode(),
                 originalUrl);
-         LinkClickedEvent event = new LinkClickedEvent(link.getShortCode(),
-                 originalUrl,
-                 LocalDateTime.now(),
-                 ip, MDC.get("correlationId"));
 
-         linkClickProducer.sendLinkClickedEvent(event);
+        LocalDateTime clickedAt = LocalDateTime.now();
+
+        LinkClickedEvent event = new LinkClickedEvent(
+                link.getShortCode(),
+                link.getOriginalUrl(),
+                clickedAt,
+                ip,
+                MDC.get("CorrelationId")
+        );
+
+        String payload;
+
+        try {
+            payload = objectMapper.writeValueAsString(event);
+        } catch (Exception e){
+            throw new RuntimeException("Failed to serialize LinkClickedEvent", e);
+        }
+
+        OutboxEvent outboxEvent = new OutboxEvent(UUID.randomUUID(),
+                "LINK",
+                link.getShortCode(),
+                "LINK_CLICKED",
+                payload,
+                OutboxStatus.PENDING,
+                LocalDateTime.now());
+
+        outboxEventRepository.save(outboxEvent);
+
 
          return originalUrl;
         }
